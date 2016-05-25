@@ -214,8 +214,14 @@ class CursorPaginationBuilder implements PaginationBuilder
     {
         if (isset($properties[self::REQUEST_PARAM_BEFORE])) {
             $this->before = $properties[self::REQUEST_PARAM_BEFORE];
-        } elseif (isset($properties[self::REQUEST_PARAM_AFTER])) {
+        } else {
+            $this->before = null;
+        }
+
+        if (isset($properties[self::REQUEST_PARAM_AFTER])) {
             $this->after = $properties[self::REQUEST_PARAM_AFTER];
+        } else {
+            $this->after = null;
         }
     }
 
