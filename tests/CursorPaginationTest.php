@@ -97,6 +97,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $sql = $query->toQuery($this->pdo, 'entries');
         $results = $this->pdo->query($sql);
         if (!$results) {
+            echo $sql;
             print_r($this->pdo->errorInfo());
             return [];
         }

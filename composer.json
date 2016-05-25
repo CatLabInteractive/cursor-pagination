@@ -6,9 +6,6 @@
     "php": ">=7.0.0",
     "catlabinteractive/base": "^0.1"
   },
-  "require-dev" : {
-    "jimbojsb/pseudo":"^0.2.1"
-  },
   "license": "MIT",
   "authors": [
     {
