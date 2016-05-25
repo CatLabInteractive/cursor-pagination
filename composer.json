@@ -1,0 +1,21 @@
+{
+  "name": "catlabinteractive/cursor-pagination",
+  "description": "Cursor pagination for REST APIs.",
+  "type": "library",
+  "require": {
+    "php": ">=7.0.0",
+    "catlabinteractive/base": "^0.1"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Thijs Van der Schaeghe",
+      "email": "info@catlab.be"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "CatLab\\CursorPagination\\": "src/CatLab/CursorPagination"
+    }
+  }
+}
