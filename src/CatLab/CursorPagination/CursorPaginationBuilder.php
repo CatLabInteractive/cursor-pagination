@@ -369,8 +369,14 @@ class CursorPaginationBuilder implements PaginationBuilder
      * @param array $properties
      * @return PaginationBuilder
      */
-    private function setFirst(array $properties) : PaginationBuilder
+    public function setFirst($properties) : PaginationBuilder
     {
+        if (!ArrayHelper::hasArrayAccess($properties)) {
+            throw new InvalidArgumentException(
+                "Could not read properties: properties must have ArrayAccess."
+            );
+        }
+
         $this->first = $properties;
         return $this;
     }
@@ -379,8 +385,14 @@ class CursorPaginationBuilder implements PaginationBuilder
      * @param array $properties
      * @return PaginationBuilder
      */
-    private function setLast(array $properties) : PaginationBuilder
+    public function setLast($properties) : PaginationBuilder
     {
+        if (!ArrayHelper::hasArrayAccess($properties)) {
+            throw new InvalidArgumentException(
+                "Could not read properties: properties must have ArrayAccess."
+            );
+        }
+
         $this->last = $properties;
         return $this;
     }
