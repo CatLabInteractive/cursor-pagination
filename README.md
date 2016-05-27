@@ -23,6 +23,8 @@ For more information, head over to this [excellent article](https://www.sitepoin
 Example
 =======
 ```php
+<?php 
+
 use CatLab\Base\Models\Database\OrderParameter;
 use CatLab\CursorPagination\CursorPaginationBuilder;
 
