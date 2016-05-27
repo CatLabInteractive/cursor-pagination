@@ -9,6 +9,7 @@ use CatLab\Base\Models\Database\LimitParameter;
 use CatLab\Base\Models\Database\SelectQueryParameters;
 use CatLab\Base\Models\Database\OrderParameter;
 use CatLab\Base\Models\Database\WhereParameter;
+use CatLab\CursorPagination\Exceptions\ColumnNotDefinedException;
 use CatLab\CursorPagination\Exceptions\DecodeCursorException;
 
 /**
@@ -26,7 +27,7 @@ class CursorPaginationBuilder implements PaginationBuilder
     private $records;
 
     /**
-     * @var array
+     * @var OrderParameter[]
      */
     private $sort = [];
 
@@ -76,10 +77,7 @@ class CursorPaginationBuilder implements PaginationBuilder
      */
     public function orderBy(OrderParameter $orderParameter)
     {
-        $this->sort[] = [
-            $orderParameter->getColumn(),
-            $orderParameter->getDirection()
-        ];
+        $this->sort[] = $orderParameter;
         
         $this->sortMap[$orderParameter->getColumn()] = [
             $orderParameter->getColumn(),
@@ -102,20 +100,38 @@ class CursorPaginationBuilder implements PaginationBuilder
         return $this;
     }
 
+    /**
+     * @param string $column
+     * @return string
+     * @throws ColumnNotDefinedException
+     */
     private function toPublic(string $column)
     {
+        if (!isset($this->privateToPublic[$column])) {
+            throw ColumnNotDefinedException::toPublic($column);
+        }
+        
         return $this->privateToPublic[$column];
     }
 
+    /**
+     * @param string $public
+     * @return string
+     * @throws ColumnNotDefinedException
+     */
     private function toPrivate(string $public)
     {
+        if (!isset($this->publicToPrivate[$public])) {
+            throw ColumnNotDefinedException::toPrivate($public);
+        }
+
         return $this->publicToPrivate[$public];
     }
 
     /**
-     * @return array
+     * @return OrderParameter[]
      */
-    public function getSortOrder()
+    public function getOrderBy()
     {
         return $this->sort;
     }
@@ -156,11 +172,11 @@ class CursorPaginationBuilder implements PaginationBuilder
         }
 
         foreach ($this->sort as $sort) {
-            $dir = $sort[1];
+            $dir = $sort->getDirection();
             if ($this->invertOrder) {
                 $dir = OrderParameter::invertDirection($dir);
             }
-            $queryBuilder->orderBy(new OrderParameter($sort[0], $dir));
+            $queryBuilder->orderBy(new OrderParameter($sort->getColumn(), $dir));
         }
 
         $queryBuilder->reverse($this->invertOrder);
@@ -318,8 +334,8 @@ class CursorPaginationBuilder implements PaginationBuilder
         $out = [];
         foreach ($this->sortMap as $k => $v) {
             if (isset($properties[$k])) {
-                $d = $v === OrderParameter::DESC ? '!' : '';
-                $out[$d . $this->privateToPublic[$k]] = $properties[$k];
+                $d = $v[1] === OrderParameter::DESC ? '!' : '';
+                $out[$d . $this->toPublic($k)] = $properties[$k];
             }
         }
         return base64_encode(json_encode($out));

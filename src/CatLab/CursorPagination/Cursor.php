@@ -50,4 +50,26 @@ class Cursor implements PaginationCursor
             CursorPaginationBuilder::REQUEST_PARAM_AFTER => $this->after
         ];
     }
+
+    /**
+     * @return mixed[]
+     */
+    public function getNext()
+    {
+        if (isset($this->after)) {
+            return [ CursorPaginationBuilder::REQUEST_PARAM_AFTER => $this->after ];
+        }
+        return null;
+    }
+
+    /**
+     * @return mixed[]
+     */
+    public function getPrevious()
+    {
+        if (isset($this->before)) {
+            return [ CursorPaginationBuilder::REQUEST_PARAM_BEFORE => $this->before ];
+        }
+        return null;
+    }
 }

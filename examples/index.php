@@ -1,28 +1,5 @@
-# cursor-pagination
-[![Build Status](https://travis-ci.org/CatLabInteractive/cursor-pagination.svg?branch=master)](https://travis-ci.org/CatLabInteractive/cursor-pagination)
+<?php
 
-Cursor pagination for REST APIs.
-
-Goal
-====
-Provide cursor based pagination to APIs or webservices. The library
-calculates the sql query parameters and the cursors that should be 
-passed through the requests.
-
-So, like LIMIT {offset}, {records}?
-===================================
-Cursor based pagination is generally more performant than page based 
-pagination (using SQL offset) since it filters the records instead 
-of limiting the amount of records returned.
-
-For changing data cursor based pagination is also more correct, since 
-adding a row to the beginning of a list might shift all records.
-
-For more information, head over to this [excellent article](https://www.sitepoint.com/paginating-real-time-data-cursor-based-pagination/).
-
-Quick start
-===========
-```php
 use CatLab\Base\Models\Database\OrderParameter;
 use CatLab\CursorPagination\CursorPaginationBuilder;
 
@@ -84,4 +61,3 @@ foreach ($results as $v) {
 $table->close();
 
 $table->navigation($builder->getCursors());
-```

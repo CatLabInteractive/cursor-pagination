@@ -2,9 +2,7 @@
 
 namespace Tests;
 
-use CatLab\Base\Models\Database\LimitParameter;
 use CatLab\Base\Models\Database\OrderParameter;
-use CatLab\Base\Models\Database\SelectQueryParameters;
 use CatLab\CursorPagination\CursorPaginationBuilder;
 use PDO;
 use PHPUnit_Framework_TestCase;
@@ -25,32 +23,32 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $data = [
-            [  1, 'A is for apple',     5 ],
-            [  2, 'B is for balloons',  5 ],
-            [  3, 'C is for CatLab',    5 ],
-            [  4, 'D is for drums',     5 ],
-            [  5, 'E is for energy',    4 ],
-            [  6, 'F is for fast',      4 ],
-            [  7, 'G is great',         4 ],
-            [  8, 'H is for Hilde',     4 ],
-            [  9, 'I is for ink',       2 ],
-            [ 10, 'J is for Jenkins',   2 ],
-            [ 11, 'K is for knitting',  2 ],
-            [ 12, 'L is for Love',      2 ],
-            [ 13, 'M is for Mario',     3 ],
-            [ 14, 'N is for Negative',  3 ],
-            [ 15, 'O is for Okay',      3 ],
-            [ 16, 'P is for Plasma',    9 ],
-            [ 17, 'Q is for Quick, best burgers in town', 9 ],
-            [ 18, 'R is for REST',      9 ],
-            [ 19, 'S is for Snake',     9 ],
-            [ 20, 'T is for Thijs',     7 ],
-            [ 21, 'U is for Universe',  7 ],
-            [ 22, 'V is for Venus',     7 ],
-            [ 23, 'W is for Wine',      7 ],
-            [ 24, 'X is for Xen',       7 ],
-            [ 25, 'Y was for Yahoo',    7 ],
-            [ 26, 'Z is for Zelda',     2 ]
+            [  1, 'A is for apple',     rand(0, 10) ],
+            [  2, 'B is for balloons',  rand(0, 10) ],
+            [  3, 'C is for CatLab',    rand(0, 10) ],
+            [  4, 'D is for drums',     rand(0, 10) ],
+            [  5, 'E is for energy',    rand(0, 10) ],
+            [  6, 'F is for fast',      rand(0, 10) ],
+            [  7, 'G is great',         rand(0, 10) ],
+            [  8, 'H is for Hilde',     rand(0, 10) ],
+            [  9, 'I is for ink',       rand(0, 10) ],
+            [ 10, 'J is for Jenkins',   rand(0, 10) ],
+            [ 11, 'K is for knitting',  rand(0, 10) ],
+            [ 12, 'L is for Love',      rand(0, 10) ],
+            [ 13, 'M is for Mario',     rand(0, 10) ],
+            [ 14, 'N is for Negative',  rand(0, 10) ],
+            [ 15, 'O is for Okay',      rand(0, 10) ],
+            [ 16, 'P is for Plasma',    rand(0, 10) ],
+            [ 17, 'Q is for Quick, best burgers in town', rand(0, 10) ],
+            [ 18, 'R is for REST',      rand(0, 10) ],
+            [ 19, 'S is for Snake',     rand(0, 10) ],
+            [ 20, 'T is for Thijs',     rand(0, 10) ],
+            [ 21, 'U is for Universe',  rand(0, 10) ],
+            [ 22, 'V is for Venus',     rand(0, 10) ],
+            [ 23, 'W is for Wine',      rand(0, 10) ],
+            [ 24, 'X is for Xen',       rand(0, 10) ],
+            [ 25, 'Y was for Yahoo',    rand(0, 10) ],
+            [ 26, 'Z is for Zelda',     rand(0, 10) ]
         ];
 
         $this->pdo = new PDO('sqlite::memory:');
@@ -258,5 +256,223 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $results = $this->getIds($builder);
 
         $this->assertEquals([ 4, 5, 6], $results);
+    }
+
+    /**
+     *
+     */
+    public function testReversePagination()
+    {
+        $builder = $this->getCursorPagination();
+
+        // Sort on id (so regular)
+        $builder->orderBy(new OrderParameter('name', OrderParameter::DESC));
+        $builder->orderBy(new OrderParameter('id', OrderParameter::ASC));
+        $builder->limit(3);
+
+        $results = $this->getIds($builder);
+        $this->assertEquals([ 26, 25, 24], $results);
+
+        // Check next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+        $this->assertEquals(
+            '{"!public_name":"X is for Xen","public_id":"24"}',
+            base64_decode($next['after'])
+        );
+
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ 23, 22, 21], $results);
+
+        // Another next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+
+        $sql = $builder->build()->toQuery($this->pdo, 'entries');
+        $this->assertEquals(
+            'SELECT * FROM entries ' .
+            'WHERE name <= \'U is for Universe\' '.
+            'AND (name < \'U is for Universe\' OR (id > \'21\')) ' .
+            'ORDER BY name DESC, id ASC LIMIT 3',
+            $sql
+        );
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ 20, 19, 18], $results);
+
+        // Previous page now
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'before' => $next['before']]);
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ 23, 22, 21], $results);
+    }
+
+    /**
+     *
+     */
+    public function testScorePagination()
+    {
+        $builder = $this->getCursorPagination();
+
+        // Sort on id (so regular)
+        $builder->orderBy(new OrderParameter('score', OrderParameter::ASC));
+        $builder->orderBy(new OrderParameter('name', OrderParameter::ASC));
+        $builder->orderBy(new OrderParameter('id', OrderParameter::ASC));
+        $builder->limit(100);
+
+        $all = $this->getIds($builder);
+
+        $builder->limit(3);
+
+        $results = $this->getIds($builder);
+        $this->assertEquals([ $all[0], $all[1], $all[2] ], $results);
+
+        // Check next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ $all[3], $all[4], $all[5] ], $results);
+
+        // Another next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ $all[6], $all[7], $all[8] ], $results);
+
+        // Previous page now
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'before' => $next['before']]);
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ $all[3], $all[4], $all[5] ], $results);
+    }
+
+    /**
+     *
+     */
+    public function testScorePaginationReverse()
+    {
+        $builder = $this->getCursorPagination();
+
+        // Sort on id (so regular)
+        $builder->orderBy(new OrderParameter('score', OrderParameter::DESC));
+        $builder->orderBy(new OrderParameter('name', OrderParameter::ASC));
+        $builder->orderBy(new OrderParameter('id', OrderParameter::ASC));
+        $builder->limit(100);
+
+        $all = $this->getIds($builder);
+
+        $builder->limit(3);
+
+        $results = $this->getIds($builder);
+        $this->assertEquals([ $all[0], $all[1], $all[2] ], $results);
+
+        // Check next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ $all[3], $all[4], $all[5] ], $results);
+
+        // Another next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ $all[6], $all[7], $all[8] ], $results);
+
+        // Previous page now
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'before' => $next['before']]);
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ $all[3], $all[4], $all[5] ], $results);
+    }
+
+    /**
+     *
+     */
+    public function testScorePaginationNameReverse()
+    {
+        $builder = $this->getCursorPagination();
+
+        // Sort on id (so regular)
+        $builder->orderBy(new OrderParameter('score', OrderParameter::ASC));
+        $builder->orderBy(new OrderParameter('name', OrderParameter::DESC));
+        $builder->orderBy(new OrderParameter('id', OrderParameter::ASC));
+        $builder->limit(100);
+
+        $all = $this->getIds($builder);
+
+        $builder->limit(3);
+
+        $results = $this->getIds($builder);
+        $this->assertEquals([ $all[0], $all[1], $all[2] ], $results);
+
+        // Check next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ $all[3], $all[4], $all[5] ], $results);
+
+        // Another next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ $all[6], $all[7], $all[8] ], $results);
+
+        // Previous page now
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'before' => $next['before']]);
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ $all[3], $all[4], $all[5] ], $results);
+    }
+
+    /**
+     * @expectedException \CatLab\CursorPagination\Exceptions\ColumnNotDefinedException
+     */
+    public function testUnregisteredPropertyException()
+    {
+        $paginationBuilder = new CursorPaginationBuilder();
+        $paginationBuilder->orderBy(new OrderParameter('foobar', OrderParameter::ASC));
+        $paginationBuilder->setFirst([
+            'id' => 1,
+            'foobar' => 2
+        ]);
+        $paginationBuilder->getCursors();
     }
 }
