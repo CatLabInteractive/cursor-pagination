@@ -316,14 +316,11 @@ class CursorPaginationBuilder implements PaginationBuilder
     private function translateCursor($properties)
     {
         $out = [];
-        foreach ($properties as $k => $v) {
-            $d = '';
-
-            if (isset($this->sortMap[$k])) {
-                $sort = $this->sortMap[$k];
-                $d = $sort[1] === OrderParameter::DESC ? '!' : '';
+        foreach ($this->sortMap as $k => $v) {
+            if (isset($properties[$k])) {
+                $d = $v === OrderParameter::DESC ? '!' : '';
+                $out[$d . $this->privateToPublic[$k]] = $properties[$k];
             }
-            $out[$d . $this->privateToPublic[$k]] = $v;
         }
         return base64_encode(json_encode($out));
     }

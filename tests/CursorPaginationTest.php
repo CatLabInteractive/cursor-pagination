@@ -93,8 +93,8 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
     private function getModels(CursorPaginationBuilder $paginationBuilder)
     {
         $query = $paginationBuilder->build();
-
         $sql = $query->toQuery($this->pdo, 'entries');
+
         $results = $this->pdo->query($sql);
         if (!$results) {
             echo $sql;
@@ -166,6 +166,86 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
+
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ 7, 8, 9], $results);
+
+        // Previous page now
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'before' => $next['before']]);
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ 4, 5, 6], $results);
+    }
+
+    public function testIdQuery()
+    {
+        $builder = $this->getCursorPagination();
+
+        // Sort on id (so regular)
+        $builder->orderBy(new OrderParameter('id', OrderParameter::ASC));
+        $builder->limit(3);
+
+        $sql = $builder->build()->toQuery($this->pdo, 'entries');
+        $this->assertEquals('SELECT * FROM entries ORDER BY id ASC LIMIT 3', $sql);
+        $results = $this->getIds($builder);
+
+        // Check next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+        $results = $this->getIds($builder);
+
+        $sql = $builder->build()->toQuery($this->pdo, 'entries');
+        $this->assertEquals('SELECT * FROM entries WHERE id > \'3\' ORDER BY id ASC LIMIT 3', $sql);
+
+        // Previous page now
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'before' => $next['before']]);
+        $sql = $builder->build()->toQuery($this->pdo, 'entries');
+        $results = $this->getIds($builder);
+
+        $this->assertEquals('SELECT * FROM entries WHERE id < \'4\' ORDER BY id DESC LIMIT 3', $sql);
+    }
+
+    /**
+     *
+     */
+    public function testNamePagination()
+    {
+        $builder = $this->getCursorPagination();
+
+        // Sort on id (so regular)
+        $builder->orderBy(new OrderParameter('name', OrderParameter::ASC));
+        $builder->orderBy(new OrderParameter('id', OrderParameter::ASC));
+        $builder->limit(3);
+
+        $results = $this->getIds($builder);
+        $this->assertEquals([ 1, 2, 3], $results);
+
+        // Check next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+        $results = $this->getIds($builder);
+
+        $this->assertEquals([ 4, 5, 6], $results);
+
+        // Another next page
+        $cursor = $builder->getCursors();
+        $next = $cursor->toArray();
+
+        $builder->setRequest([ 'after' => $next['after']]);
+
+        $sql = $builder->build()->toQuery($this->pdo, 'entries');
+        $this->assertEquals('SELECT * FROM entries WHERE name >= \'F is for fast\' AND (name > \'F is for fast\' OR (id > \'6\')) ORDER BY name ASC, id ASC LIMIT 3', $sql);
         $results = $this->getIds($builder);
 
         $this->assertEquals([ 7, 8, 9], $results);
