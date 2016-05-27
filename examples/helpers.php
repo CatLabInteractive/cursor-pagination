@@ -16,6 +16,9 @@ class Table
         $this->columns = $columns;
     }
 
+    /**
+     *
+     */
     public function open()
     {
         echo '<table>';
@@ -27,6 +30,19 @@ class Table
         echo '</tr>';
     }
 
+    /**
+     * @param $results
+     */
+    public function data($results)
+    {
+        foreach ($results as $v) {
+            $this->row($v);
+        }
+    }
+
+    /**
+     * @param $data
+     */
     public function row($data)
     {
         echo '<tr>';
@@ -52,6 +68,9 @@ class Table
         echo '</ul>';
     }
 
+    /**
+     *
+     */
     public function close()
     {
         echo '</table>';

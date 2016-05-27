@@ -20,8 +20,8 @@ adding a row to the beginning of a list might shift all records.
 
 For more information, head over to this [excellent article](https://www.sitepoint.com/paginating-real-time-data-cursor-based-pagination/).
 
-Quick start
-===========
+Example
+=======
 ```php
 use CatLab\Base\Models\Database\OrderParameter;
 use CatLab\CursorPagination\CursorPaginationBuilder;

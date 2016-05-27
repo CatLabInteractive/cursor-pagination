@@ -49,9 +49,7 @@ $results = $builder->processResults($query, $results);
 // Display the records
 $table = new Table([ 'id', 'name', 'score' ]);
 $table->open();
-foreach ($results as $v) {
-    $table->row($v);
-}
+$table->data($results);
 $table->close();
 
 $table->navigation($builder->getNavigation());
