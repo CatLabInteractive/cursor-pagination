@@ -113,14 +113,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
             return [];
         }
 
-        if ($query->isReverse()) {
-            $complete = array_reverse($complete);
-        }
-
-        $paginationBuilder->setFirst($complete[0]);
-        $paginationBuilder->setLast($complete[count($complete) - 1]);
-
-        return $complete;
+        return $paginationBuilder->processResults($query, $complete);
     }
 
     /**
@@ -151,7 +144,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ 1, 2, 3], $results);
 
         // Check next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -160,7 +153,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ 4, 5, 6], $results);
 
         // Another next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -170,7 +163,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ 7, 8, 9], $results);
 
         // Previous page now
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'before' => $next['before']]);
@@ -192,7 +185,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $results = $this->getIds($builder);
 
         // Check next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -202,7 +195,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('SELECT * FROM entries WHERE id > \'3\' ORDER BY id ASC LIMIT 3', $sql);
 
         // Previous page now
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'before' => $next['before']]);
@@ -228,7 +221,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ 1, 2, 3], $results);
 
         // Check next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -237,7 +230,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ 4, 5, 6], $results);
 
         // Another next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -249,7 +242,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ 7, 8, 9], $results);
 
         // Previous page now
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'before' => $next['before']]);
@@ -274,7 +267,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ 26, 25, 24], $results);
 
         // Check next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -288,7 +281,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ 23, 22, 21], $results);
 
         // Another next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -306,7 +299,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ 20, 19, 18], $results);
 
         // Previous page now
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'before' => $next['before']]);
@@ -336,7 +329,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ $all[0], $all[1], $all[2] ], $results);
 
         // Check next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -345,7 +338,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ $all[3], $all[4], $all[5] ], $results);
 
         // Another next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -355,7 +348,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ $all[6], $all[7], $all[8] ], $results);
 
         // Previous page now
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'before' => $next['before']]);
@@ -385,7 +378,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ $all[0], $all[1], $all[2] ], $results);
 
         // Check next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -394,7 +387,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ $all[3], $all[4], $all[5] ], $results);
 
         // Another next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -404,7 +397,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ $all[6], $all[7], $all[8] ], $results);
 
         // Previous page now
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'before' => $next['before']]);
@@ -434,7 +427,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ $all[0], $all[1], $all[2] ], $results);
 
         // Check next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -443,7 +436,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ $all[3], $all[4], $all[5] ], $results);
 
         // Another next page
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'after' => $next['after']]);
@@ -453,7 +446,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals([ $all[6], $all[7], $all[8] ], $results);
 
         // Previous page now
-        $cursor = $builder->getCursors();
+        $cursor = $builder->getNavigation();
         $next = $cursor->toArray();
 
         $builder->setRequest([ 'before' => $next['before']]);
@@ -469,10 +462,11 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
     {
         $paginationBuilder = new CursorPaginationBuilder();
         $paginationBuilder->orderBy(new OrderParameter('foobar', OrderParameter::ASC));
-        $paginationBuilder->setFirst([
+        $query = $paginationBuilder->build();
+        $paginationBuilder->processResults($query, [[
             'id' => 1,
             'foobar' => 2
-        ]);
-        $paginationBuilder->getCursors();
+        ]]);
+        $paginationBuilder->getNavigation();
     }
 }

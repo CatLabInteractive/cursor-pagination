@@ -3,14 +3,16 @@
 namespace CatLab\CursorPagination;
 
 use CatLab\Base\Enum\Operator;
+use CatLab\Base\Helpers\ArrayHelper;
 use CatLab\Base\Interfaces\Pagination\PaginationBuilder;
-use CatLab\Base\Interfaces\Pagination\PaginationCursor;
+use CatLab\Base\Interfaces\Pagination\Navigation;
 use CatLab\Base\Models\Database\LimitParameter;
 use CatLab\Base\Models\Database\SelectQueryParameters;
 use CatLab\Base\Models\Database\OrderParameter;
 use CatLab\Base\Models\Database\WhereParameter;
 use CatLab\CursorPagination\Exceptions\ColumnNotDefinedException;
 use CatLab\CursorPagination\Exceptions\DecodeCursorException;
+use InvalidArgumentException;
 
 /**
  * Class PaginationBuilder
@@ -185,31 +187,11 @@ class CursorPaginationBuilder implements PaginationBuilder
     }
 
     /**
-     * @param array $properties
-     * @return PaginationBuilder
+     * @return Navigation
      */
-    public function setFirst(array $properties) : PaginationBuilder
+    public function getNavigation() : Navigation
     {
-        $this->first = $properties;
-        return $this;
-    }
-
-    /**
-     * @param array $properties
-     * @return PaginationBuilder
-     */
-    public function setLast(array $properties) : PaginationBuilder
-    {
-        $this->last = $properties;
-        return $this;
-    }
-
-    /**
-     * @return PaginationCursor
-     */
-    public function getCursors() : PaginationCursor
-    {
-        $cursor = new Cursor();
+        $cursor = new Cursors();
 
         if ($this->first) {
             $cursor->setBefore($this->translateCursor($this->first));
@@ -239,6 +221,31 @@ class CursorPaginationBuilder implements PaginationBuilder
         } else {
             $this->after = null;
         }
+    }
+
+    /**
+     * @param SelectQueryParameters $query
+     * @param mixed[]
+     * @return mixed[]
+     * @throws InvalidArgumentException
+     */
+    public function processResults(SelectQueryParameters $query, $results)
+    {
+        if (!ArrayHelper::isIterable($results)) {
+            throw new InvalidArgumentException("Results should be iterable.");
+        }
+
+        if ($query->isReverse()) {
+            $results = ArrayHelper::reverse($results);
+        }
+
+        // Set the first and the last values
+        if (count($results) > 0) {
+            $this->setFirst($results[0]);
+            $this->setLast($results[count($results) - 1]);
+        }
+
+        return $results;
     }
 
     /**
@@ -356,5 +363,25 @@ class CursorPaginationBuilder implements PaginationBuilder
             }
         }
         throw new DecodeCursorException("Could not decode cursor.");
+    }
+
+    /**
+     * @param array $properties
+     * @return PaginationBuilder
+     */
+    private function setFirst(array $properties) : PaginationBuilder
+    {
+        $this->first = $properties;
+        return $this;
+    }
+
+    /**
+     * @param array $properties
+     * @return PaginationBuilder
+     */
+    private function setLast(array $properties) : PaginationBuilder
+    {
+        $this->last = $properties;
+        return $this;
     }
 }

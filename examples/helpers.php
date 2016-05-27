@@ -37,9 +37,9 @@ class Table
     }
 
     /**
-     * @param \CatLab\Base\Interfaces\Pagination\PaginationCursor $cursor
+     * @param \CatLab\Base\Interfaces\Pagination\Navigation $cursor
      */
-    public function navigation(\CatLab\Base\Interfaces\Pagination\PaginationCursor $cursor)
+    public function navigation(\CatLab\Base\Interfaces\Pagination\Navigation $cursor)
     {
         echo '<ul>';
         if ($previous = $cursor->getPrevious()) {

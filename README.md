@@ -65,15 +65,9 @@ $query = $builder->build();
 // Load the data
 $sql = $query->toQuery($pdo, 'entries');
 $results = $pdo->query($sql)->fetchAll();
-if ($query->isReverse()) {
-    $results = array_reverse($results);
-}
 
-// Set the first and the last values
-if (count($results) > 0) {
-    $builder->setFirst($results[0]);
-    $builder->setLast($results[count($results) - 1]);
-}
+// Post process results. Very important. Don't forget.
+$results = $builder->processResults($query, $results);
 
 // Display the records
 $table = new Table([ 'id', 'name', 'score' ]);
@@ -83,5 +77,5 @@ foreach ($results as $v) {
 }
 $table->close();
 
-$table->navigation($builder->getCursors());
+$table->navigation($builder->getNavigation());
 ```

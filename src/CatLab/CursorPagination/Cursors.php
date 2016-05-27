@@ -2,13 +2,13 @@
 
 namespace CatLab\CursorPagination;
 
-use CatLab\Base\Interfaces\Pagination\PaginationCursor;
+use CatLab\Base\Interfaces\Pagination\Navigation;
 
 /**
  * Class Cursor
  * @package CatLab\CursorPagination
  */
-class Cursor implements PaginationCursor
+class Cursors implements Navigation
 {
     /**
      * @var string
