@@ -81,3 +81,5 @@ $table->close();
 
 $table->navigation($builder->getNavigation());
 ```
+
+This example is live at https://dev.catlab.eu/cursor-pagination/examples/
