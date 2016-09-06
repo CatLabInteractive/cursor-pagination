@@ -81,7 +81,7 @@ class CursorPaginationBuilder implements PaginationBuilder
     {
         $this->sort[] = $orderParameter;
         
-        $this->sortMap[$orderParameter->getColumn()] = [
+        $this->sortMap[(string)$orderParameter->getColumn()] = [
             $orderParameter->getColumn(),
             $orderParameter->getDirection()
         ];
