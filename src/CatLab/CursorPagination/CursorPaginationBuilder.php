@@ -178,7 +178,7 @@ class CursorPaginationBuilder implements PaginationBuilder
             if ($this->invertOrder) {
                 $dir = OrderParameter::invertDirection($dir);
             }
-            $queryBuilder->orderBy(new OrderParameter($sort->getColumn(), $dir));
+            $queryBuilder->orderBy(new OrderParameter($sort->getColumn(), $dir, $sort->getEntity()));
         }
 
         $queryBuilder->reverse($this->invertOrder);
