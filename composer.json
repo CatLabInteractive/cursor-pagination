@@ -4,10 +4,10 @@
   "type": "library",
   "require": {
     "php": ">=7.0.0",
-    "catlabinteractive/base": "^0.1"
+    "catlabinteractive/base": "^1.0"
   },
   "require-dev" : {
-    "phpunit/phpunit": "*"
+    "phpunit/phpunit": "5.3.*",
   },
   "license": "MIT",
   "authors": [
