@@ -192,7 +192,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $results = $this->getIds($builder);
 
         $sql = $builder->build()->toQuery($this->pdo, 'entries');
-        $this->assertEquals('SELECT * FROM entries WHERE id > \'3\' ORDER BY id ASC LIMIT 3', $sql);
+        $this->assertEquals('SELECT * FROM entries WHERE `id` > \'3\' ORDER BY id ASC LIMIT 3', $sql);
 
         // Previous page now
         $cursor = $builder->getNavigation();
@@ -202,7 +202,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $sql = $builder->build()->toQuery($this->pdo, 'entries');
         $results = $this->getIds($builder);
 
-        $this->assertEquals('SELECT * FROM entries WHERE id < \'4\' ORDER BY id DESC LIMIT 3', $sql);
+        $this->assertEquals('SELECT * FROM entries WHERE `id` < \'4\' ORDER BY id DESC LIMIT 3', $sql);
     }
 
     /**
@@ -236,7 +236,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $builder->setRequest([ 'after' => $next['after']]);
 
         $sql = $builder->build()->toQuery($this->pdo, 'entries');
-        $this->assertEquals('SELECT * FROM entries WHERE name >= \'F is for fast\' AND (name > \'F is for fast\' OR (id > \'6\')) ORDER BY name ASC, id ASC LIMIT 3', $sql);
+        $this->assertEquals('SELECT * FROM entries WHERE `name` >= \'F is for fast\' AND (`name` > \'F is for fast\' OR (`id` > \'6\')) ORDER BY name ASC, id ASC LIMIT 3', $sql);
         $results = $this->getIds($builder);
 
         $this->assertEquals([ 7, 8, 9], $results);
@@ -289,8 +289,8 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
         $sql = $builder->build()->toQuery($this->pdo, 'entries');
         $this->assertEquals(
             'SELECT * FROM entries ' .
-            'WHERE name <= \'U is for Universe\' '.
-            'AND (name < \'U is for Universe\' OR (id > \'21\')) ' .
+            'WHERE `name` <= \'U is for Universe\' '.
+            'AND (`name` < \'U is for Universe\' OR (`id` > \'21\')) ' .
             'ORDER BY name DESC, id ASC LIMIT 3',
             $sql
         );
