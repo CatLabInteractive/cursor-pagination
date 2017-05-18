@@ -80,10 +80,11 @@ class CursorPaginationBuilder implements PaginationBuilder
     public function orderBy(OrderParameter $orderParameter)
     {
         $this->sort[] = $orderParameter;
-        
+
         $this->sortMap[(string)$orderParameter->getColumn()] = [
             $orderParameter->getColumn(),
-            $orderParameter->getDirection()
+            $orderParameter->getDirection(),
+            $orderParameter->getEntity()
         ];
 
         return $this;
@@ -112,7 +113,7 @@ class CursorPaginationBuilder implements PaginationBuilder
         if (!isset($this->privateToPublic[$column])) {
             throw ColumnNotDefinedException::toPublic($column);
         }
-        
+
         return $this->privateToPublic[$column];
     }
 
@@ -249,123 +250,6 @@ class CursorPaginationBuilder implements PaginationBuilder
     }
 
     /**
-     * @param string $cursor
-     * @param string $direction
-     * @return WhereParameter
-     * @throws DecodeCursorException
-     */
-    private function processCursor(string $cursor, string $direction)
-    {
-        // After and before are eachother's opposites
-        if ($direction == self::REQUEST_PARAM_AFTER) {
-            $opp_c = Operator::GT;
-            $opp_ce = Operator::GTE;
-            $opp_nc = Operator::LT;
-            $opp_nce = Operator::LTE;
-        } else {
-            $opp_c = Operator::LT;
-            $opp_ce = Operator::LTE;
-            $opp_nc = Operator::GT;
-            $opp_nce = Operator::GTE;
-        }
-
-        $decoded = $this->decodeCursor($cursor);
-
-        // We need to work backwards
-        $decoded = array_reverse($decoded);
-
-        // The most inner (and least significant column) is the only one that MUST be unique.
-        reset($decoded);
-        $k = key($decoded);
-        $v = current($decoded);
-
-        // Drop it so we don't handle it again
-        array_shift($decoded);
-
-        list ($private, $direction) = $this->toPrivateWithDirection($k);
-        $where = new WhereParameter(
-            $private,
-            $direction == OrderParameter::ASC ? $opp_c : $opp_nc,
-            $v
-        );
-
-        // If we have any parameters left, start piling them up.
-        foreach ($decoded as $k => $v) {
-            list ($private, $direction) = $this->toPrivateWithDirection($k);
-
-            $outerWhere = new WhereParameter(
-                $private,
-                $direction === OrderParameter::ASC ? $opp_ce : $opp_nce,
-                $v
-            );
-
-            $outerWhere->and(
-                (new WhereParameter(
-                    $private,
-                    $direction === OrderParameter::ASC ? $opp_c : $opp_nc,
-                    $v
-                ))->or($where)
-            );
-
-            $where = $outerWhere;
-        }
-
-        return $where;
-    }
-
-    /**
-     * @param $k
-     * @return array
-     */
-    private function toPrivateWithDirection($k)
-    {
-        $firstChar = mb_substr($k, 0, 1);
-        if ($firstChar === '!') {
-            $private = $this->toPrivate(mb_substr($k, 1));
-            $direction = OrderParameter::DESC;
-        } else {
-            $private = $this->toPrivate($k);
-            $direction = OrderParameter::ASC;
-        }
-
-        return [ $private, $direction ];
-    }
-
-    /**
-     * Translate private cursor in their public counterparts
-     * @param $properties
-     * @return array
-     */
-    private function translateCursor($properties)
-    {
-        $out = [];
-        foreach ($this->sortMap as $k => $v) {
-            if (isset($properties[$k])) {
-                $d = $v[1] === OrderParameter::DESC ? '!' : '';
-                $out[$d . $this->toPublic($k)] = $properties[$k];
-            }
-        }
-        return base64_encode(json_encode($out));
-    }
-
-    /**
-     * @param $cursor
-     * @return array
-     * @throws DecodeCursorException
-     */
-    private function decodeCursor($cursor)
-    {
-        $data = base64_decode($cursor);
-        if ($data) {
-            $data = json_decode($data, true);
-            if ($data) {
-                return $data;
-            }
-        }
-        throw new DecodeCursorException("Could not decode cursor.");
-    }
-
-    /**
      * @param array $properties
      * @return PaginationBuilder
      */
@@ -395,5 +279,130 @@ class CursorPaginationBuilder implements PaginationBuilder
 
         $this->last = $properties;
         return $this;
+    }
+
+
+    /**
+     * @param string $cursor
+     * @param string $direction
+     * @return WhereParameter
+     * @throws DecodeCursorException
+     */
+    protected function processCursor(string $cursor, string $direction)
+    {
+        // After and before are eachother's opposites
+        if ($direction == self::REQUEST_PARAM_AFTER) {
+            $opp_c = Operator::GT;
+            $opp_ce = Operator::GTE;
+            $opp_nc = Operator::LT;
+            $opp_nce = Operator::LTE;
+        } else {
+            $opp_c = Operator::LT;
+            $opp_ce = Operator::LTE;
+            $opp_nc = Operator::GT;
+            $opp_nce = Operator::GTE;
+        }
+
+        $decoded = $this->decodeCursor($cursor);
+
+        // We need to work backwards
+        $decoded = array_reverse($decoded);
+
+        // The most inner (and least significant column) is the only one that MUST be unique.
+        reset($decoded);
+        $k = key($decoded);
+        $v = current($decoded);
+
+        // Drop it so we don't handle it again
+        array_shift($decoded);
+
+        list ($private, $direction) = $this->toPrivateWithDirection($k);
+
+        /** @var OrderParameter $order */
+        $entity = $this->sortMap[$private][2];
+        $where = new WhereParameter(
+            $private,
+            $direction == OrderParameter::ASC ? $opp_c : $opp_nc,
+            $v,
+            $entity
+        );
+
+        // If we have any parameters left, start piling them up.
+        foreach ($decoded as $k => $v) {
+            list ($private, $direction) = $this->toPrivateWithDirection($k);
+            $entity = $this->sortMap[$private][2];
+
+            $outerWhere = new WhereParameter(
+                $private,
+                $direction === OrderParameter::ASC ? $opp_ce : $opp_nce,
+                $v,
+                $entity
+            );
+
+            $outerWhere->and(
+                (new WhereParameter(
+                    $private,
+                    $direction === OrderParameter::ASC ? $opp_c : $opp_nc,
+                    $v,
+                    $entity
+                ))->or($where)
+            );
+
+            $where = $outerWhere;
+        }
+
+        return $where;
+    }
+
+    /**
+     * @param $k
+     * @return array
+     */
+    protected function toPrivateWithDirection($k)
+    {
+        $firstChar = mb_substr($k, 0, 1);
+        if ($firstChar === '!') {
+            $private = $this->toPrivate(mb_substr($k, 1));
+            $direction = OrderParameter::DESC;
+        } else {
+            $private = $this->toPrivate($k);
+            $direction = OrderParameter::ASC;
+        }
+
+        return [ $private, $direction ];
+    }
+
+    /**
+     * Translate private cursor in their public counterparts
+     * @param $properties
+     * @return array
+     */
+    protected function translateCursor($properties)
+    {
+        $out = [];
+        foreach ($this->sortMap as $k => $v) {
+            if (isset($properties[$k])) {
+                $d = $v[1] === OrderParameter::DESC ? '!' : '';
+                $out[$d . $this->toPublic($k)] = $properties[$k];
+            }
+        }
+        return base64_encode(json_encode($out));
+    }
+
+    /**
+     * @param $cursor
+     * @return array
+     * @throws DecodeCursorException
+     */
+    protected function decodeCursor($cursor)
+    {
+        $data = base64_decode($cursor);
+        if ($data) {
+            $data = json_decode($data, true);
+            if ($data) {
+                return $data;
+            }
+        }
+        throw new DecodeCursorException("Could not decode cursor.");
     }
 }
