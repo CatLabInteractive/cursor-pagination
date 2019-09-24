@@ -74,6 +74,11 @@ class CursorPaginationBuilder implements PaginationBuilder
     private $invertOrder = false;
 
     /**
+     * @var \closure[]
+     */
+    private $transformers = [];
+
+    /**
      * @param OrderParameter $orderParameter
      * @return $this
      */
@@ -95,10 +100,11 @@ class CursorPaginationBuilder implements PaginationBuilder
      * @param string $public
      * @return $this
      */
-    public function registerPropertyName(string $column, string $public)
+    public function registerPropertyName(string $column, string $public, \closure $transformer = null)
     {
         $this->publicToPrivate[$public] = $column;
         $this->privateToPublic[$column] = $public;
+        $this->transformers[$column] = $transformer;
 
         return $this;
     }
@@ -108,7 +114,7 @@ class CursorPaginationBuilder implements PaginationBuilder
      * @return string
      * @throws ColumnNotDefinedException
      */
-    private function toPublic(string $column)
+    public function toPublic(string $column)
     {
         if (!isset($this->privateToPublic[$column])) {
             throw ColumnNotDefinedException::toPublic($column);
@@ -122,7 +128,7 @@ class CursorPaginationBuilder implements PaginationBuilder
      * @return string
      * @throws ColumnNotDefinedException
      */
-    private function toPrivate(string $public)
+    public function toPrivate(string $public)
     {
         if (!isset($this->publicToPrivate[$public])) {
             throw ColumnNotDefinedException::toPrivate($public);
@@ -323,7 +329,7 @@ class CursorPaginationBuilder implements PaginationBuilder
         $where = new WhereParameter(
             $private,
             $direction == OrderParameter::ASC ? $opp_c : $opp_nc,
-            $v,
+            $this->transform($private, $v),
             $entity
         );
 
@@ -335,7 +341,7 @@ class CursorPaginationBuilder implements PaginationBuilder
             $outerWhere = new WhereParameter(
                 $private,
                 $direction === OrderParameter::ASC ? $opp_ce : $opp_nce,
-                $v,
+                $this->transform($private, $v),
                 $entity
             );
 
@@ -343,7 +349,7 @@ class CursorPaginationBuilder implements PaginationBuilder
                 (new WhereParameter(
                     $private,
                     $direction === OrderParameter::ASC ? $opp_c : $opp_nc,
-                    $v,
+                    $this->transform($private, $v),
                     $entity
                 ))->or($where)
             );
@@ -352,6 +358,19 @@ class CursorPaginationBuilder implements PaginationBuilder
         }
 
         return $where;
+    }
+
+    /**
+     * @param $privateName
+     * @param $value
+     * @return mixed
+     */
+    protected function transform($privateName, $value)
+    {
+        if (isset($this->transformers[$privateName])) {
+            return call_user_func($this->transformers[$privateName], $value);
+        }
+        return $value;
     }
 
     /**
