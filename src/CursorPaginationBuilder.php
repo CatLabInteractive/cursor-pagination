@@ -250,6 +250,12 @@ class CursorPaginationBuilder implements PaginationBuilder
             $results = ArrayHelper::reverse($results);
         }
 
+        // Set the first and the last values
+        if (count($results) > 0) {
+            $this->setFirst($results[0]);
+            $this->setLast($results[count($results) - 1]);
+        }
+
         return $this->processCollection($results);
     }
 
@@ -431,12 +437,7 @@ class CursorPaginationBuilder implements PaginationBuilder
      */
     public function processCollection($results)
     {
-        // Set the first and the last values
-        if (count($results) > 0) {
-            $this->setFirst($results[0]);
-            $this->setLast($results[count($results) - 1]);
-        }
-
+        // setFirst and setLast must be called by the user.
         return $results;
     }
 }
