@@ -158,6 +158,8 @@ class CursorPaginationBuilder implements PaginationBuilder
     /**
      * @param SelectQueryParameters $queryBuilder
      * @return SelectQueryParameters
+     * @throws DecodeCursorException
+     * @throws ColumnNotDefinedException
      */
     public function build(SelectQueryParameters $queryBuilder = null)
     {
@@ -195,6 +197,7 @@ class CursorPaginationBuilder implements PaginationBuilder
 
     /**
      * @return Navigation
+     * @throws ColumnNotDefinedException
      */
     public function getNavigation() : Navigation
     {
@@ -235,6 +238,7 @@ class CursorPaginationBuilder implements PaginationBuilder
      * @param mixed[]
      * @return mixed[]
      * @throws InvalidArgumentException
+     * @throws \CatLab\Base\Helpers\Exceptions\ArrayHelperException
      */
     public function processResults(SelectQueryParameters $query, $results)
     {
@@ -246,13 +250,7 @@ class CursorPaginationBuilder implements PaginationBuilder
             $results = ArrayHelper::reverse($results);
         }
 
-        // Set the first and the last values
-        if (count($results) > 0) {
-            $this->setFirst($results[0]);
-            $this->setLast($results[count($results) - 1]);
-        }
-
-        return $results;
+        return $this->processCollection($results);
     }
 
     /**
@@ -293,6 +291,7 @@ class CursorPaginationBuilder implements PaginationBuilder
      * @param string $direction
      * @return WhereParameter
      * @throws DecodeCursorException
+     * @throws ColumnNotDefinedException
      */
     protected function processCursor(string $cursor, string $direction)
     {
@@ -376,6 +375,7 @@ class CursorPaginationBuilder implements PaginationBuilder
     /**
      * @param $k
      * @return array
+     * @throws ColumnNotDefinedException
      */
     protected function toPrivateWithDirection($k)
     {
@@ -395,6 +395,7 @@ class CursorPaginationBuilder implements PaginationBuilder
      * Translate private cursor in their public counterparts
      * @param $properties
      * @return array
+     * @throws ColumnNotDefinedException
      */
     protected function translateCursor($properties)
     {
@@ -423,5 +424,19 @@ class CursorPaginationBuilder implements PaginationBuilder
             }
         }
         throw new DecodeCursorException("Could not decode cursor.");
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function processCollection($results)
+    {
+        // Set the first and the last values
+        if (count($results) > 0) {
+            $this->setFirst($results[0]);
+            $this->setLast($results[count($results) - 1]);
+        }
+
+        return $results;
     }
 }
