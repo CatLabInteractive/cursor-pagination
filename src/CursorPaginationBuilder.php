@@ -335,6 +335,7 @@ class CursorPaginationBuilder implements PaginationBuilder
             $private,
             $direction == OrderParameter::ASC ? $opp_c : $opp_nc,
             $this->transform($private, $v),
+            false,
             $entity
         );
 
@@ -347,6 +348,7 @@ class CursorPaginationBuilder implements PaginationBuilder
                 $private,
                 $direction === OrderParameter::ASC ? $opp_ce : $opp_nce,
                 $this->transform($private, $v),
+                false,
                 $entity
             );
 
@@ -355,6 +357,7 @@ class CursorPaginationBuilder implements PaginationBuilder
                     $private,
                     $direction === OrderParameter::ASC ? $opp_c : $opp_nc,
                     $this->transform($private, $v),
+                    false,
                     $entity
                 ))->or($where)
             );
