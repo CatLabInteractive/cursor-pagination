@@ -3,11 +3,11 @@
   "description": "Cursor pagination for REST APIs.",
   "type": "library",
   "require": {
-    "php": ">=7.0.0",
     "catlabinteractive/base": "^1.0.10"
   },
   "require-dev" : {
-    "phpunit/phpunit": "5.3.*"
+    "phpunit/phpunit": "^9.0",
+    "ext-pdo": "*"
   },
   "license": "MIT",
   "authors": [

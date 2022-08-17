@@ -5,12 +5,12 @@ namespace Tests;
 use CatLab\Base\Models\Database\OrderParameter;
 use CatLab\CursorPagination\CursorPaginationBuilder;
 use PDO;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Class CursorPaginationTest
  */
-class CursorPaginationTest extends PHPUnit_Framework_TestCase
+class CursorPaginationTest extends TestCase
 {
     /**
      * @var PDO
@@ -20,7 +20,7 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
     /**
      *
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $data = [
             [  1, 'A is for apple',     rand(0, 10) ],
@@ -456,10 +456,15 @@ class CursorPaginationTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \CatLab\CursorPagination\Exceptions\ColumnNotDefinedException
+     * @return void
+     * @throws \CatLab\Base\Helpers\Exceptions\ArrayHelperException
+     * @throws \CatLab\CursorPagination\Exceptions\ColumnNotDefinedException
+     * @throws \CatLab\CursorPagination\Exceptions\DecodeCursorException
      */
     public function testUnregisteredPropertyException()
     {
+        $this->expectException(\CatLab\CursorPagination\Exceptions\ColumnNotDefinedException::class);
+
         $paginationBuilder = new CursorPaginationBuilder();
         $paginationBuilder->orderBy(new OrderParameter('foobar', OrderParameter::ASC));
         $query = $paginationBuilder->build();

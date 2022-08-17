@@ -98,6 +98,7 @@ class CursorPaginationBuilder implements PaginationBuilder
     /**
      * @param string $column
      * @param string $public
+     * @param \closure|null $transformer
      * @return $this
      */
     public function registerPropertyName(string $column, string $public, \closure $transformer = null)
@@ -231,6 +232,8 @@ class CursorPaginationBuilder implements PaginationBuilder
         } else {
             $this->after = null;
         }
+
+        return $this;
     }
 
     /**
@@ -403,7 +406,7 @@ class CursorPaginationBuilder implements PaginationBuilder
     /**
      * Translate private cursor in their public counterparts
      * @param $properties
-     * @return array
+     * @return string
      * @throws ColumnNotDefinedException
      */
     protected function translateCursor($properties)
